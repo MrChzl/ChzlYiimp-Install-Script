@@ -62,6 +62,7 @@
     sudo apt -y update 
     sudo apt -y upgrade
     sudo apt -y autoremove
+    sudo apt-get install -y software-properties-common
     sudo apt -y install dialog python3 python3-pip acl nano apt-transport-https
     echo -e "$GREEN Done...$COL_RESET"
 
@@ -382,7 +383,12 @@
     sudo make
     
     # Compil Stratum
-    cd $HOME/yiimp/stratum
+    cd $HOME/yiimp/stratum/
+    make -C algos
+    make -C sha3
+    make -C iniparser
+    cd secp256k1 && chmod +x autogen.sh && ./autogen.sh && ./configure --enable-experimental --enable-module-ecdh --with-bignum=no --enable-endomorphism && make
+    cd $HOME/yiimp/stratum/
     if [[ ("$BTC" == "y" || "$BTC" == "Y") ]]; then
     sudo sed -i 's/CFLAGS += -DNO_EXCHANGE/#CFLAGS += -DNO_EXCHANGE/' $HOME/yiimp/stratum/Makefile
     fi
@@ -955,7 +961,7 @@
     cd yiimp/sql
     
     # Import sql dump
-    sudo zcat 2016-04-03-yaamp.sql.gz | sudo mysql --defaults-group-suffix=host1
+    sudo zcat 2021-06-21-yaamp.sql.gz | sudo mysql --defaults-group-suffix=host1
     
     # Oh the humanity!
     sudo mysql --defaults-group-suffix=host1 --force < 2016-04-24-market_history.sql
@@ -968,13 +974,17 @@
     sudo mysql --defaults-group-suffix=host1 --force < 2016-11-23-coins.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-02-05-benchmarks.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-03-31-earnings_index.sql
+    sudo mysql --defaults-group-suffix=host1 --force < 2020-06-03-blocks.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-05-accounts_case_swaptime.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-06-payouts_coinid_memo.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-09-notifications.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-10-bookmarks.sql
+    sudo mysql --defaults-group-suffix=host1 --force < 2018-09-22-workers.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2017-11-segwit.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2018-01-stratums_ports.sql
     sudo mysql --defaults-group-suffix=host1 --force < 2018-02-coins_getinfo.sql
+    sudo mysql --defaults-group-suffix=host1 --force < 2019-03-coins_thepool_life.sql
+
     echo -e "$GREEN Done...$COL_RESET"
         
     
@@ -1006,6 +1016,8 @@
     
     define('"'"'YAAMP_LIMIT_ESTIMATE'"'"', false);
     
+    define('"'"'YAAMP_FEES_SOLO'"'"', 0.5);
+    
     define('"'"'YAAMP_FEES_MINING'"'"', 0.5);
     define('"'"'YAAMP_FEES_EXCHANGE'"'"', 2);
     define('"'"'YAAMP_FEES_RENTING'"'"', 2);
@@ -1033,7 +1045,7 @@
     define('"'"'YAAMP_CREATE_NEW_COINS'"'"', false);
     define('"'"'YAAMP_NOTIFY_NEW_COINS'"'"', false);
     
-    define('"'"'YAAMP_DEFAULT_ALGO'"'"', '"'"'x11'"'"');
+    define('"'"'YAAMP_DEFAULT_ALGO'"'"', '"'"'all'"'"');
     
     define('"'"'YAAMP_USE_NGINX'"'"', true);
     
@@ -1073,6 +1085,14 @@
         '"'"'scrypt'"'"' => 20.0,
         '"'"'sha256'"'"' => 5.0,
      );
+     
+     // Sample fixed pool fees solo
+    $configFixedPoolFeesSolo = array(
+        '"'"'zr5'"'"' => 2.0,
+        '"'"'scrypt'"'"' => 20.0,
+        '"'"'sha256'"'"' => 5.0,
+        
+    );
     
     // Sample custom stratum ports
     $configCustomPorts = array(
